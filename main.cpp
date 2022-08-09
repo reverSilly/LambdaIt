@@ -1,19 +1,16 @@
 #include <iostream>
 #include "LambdaIt.hpp"
-using namespace reverSilly;
+using namespace reverSilly::LambdaIt;
 using namespace std;
-struct A
+void func()
 {
-	int operator[](int a)
-	{
-		return a*2;
-	}
-};
+	cout<<20;
+}
 int main()
 {
-	using LambdaIt::it;
-
-	cout<< (it<int>).at(20);
+	auto i=(2-it<int>).get();
+	int j=20;
+	cout<<i(j)<<' '<<j;
 	/**
 	 * (2-it<int>)
 	 * =>

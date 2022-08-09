@@ -82,55 +82,55 @@ namespace reverSilly
 			/**
 			 * unary functors
 			 */
-			constexpr auto Flip{[](auto i){return ~i;}};
-			constexpr auto Not{[](auto i){return !i;}};
-			constexpr auto AddressOf{[](auto i){return &i;}};
-			constexpr auto Positive{[](auto i){return +i;}};
-			constexpr auto Negative{[](auto i){return -i;}};
-			constexpr auto Dereference{[](auto i){return *i;}};
-			constexpr auto PrefixIncrease{[](auto i){return ++i;}};
-			constexpr auto PostfixIncrease{[](auto i){return i++;}};
-			constexpr auto PrefixDecrease{[](auto i){return --i;}};
-			constexpr auto PostfixDecrease{[](auto i){return i--;}};
-			constexpr auto IndirectAccess{[](auto i){return i.operator->();}};
+			constexpr auto Flip{[]<typename T>(T&&i){return ~std::forward<T>(i);}};
+			constexpr auto Not{[]<typename T>(T&&i){return !std::forward<T>(i);}};
+			constexpr auto AddressOf{[]<typename T>(T&&i){return &std::forward<T>(i);}};
+			constexpr auto Positive{[]<typename T>(T&&i){return +std::forward<T>(i);}};
+			constexpr auto Negative{[]<typename T>(T&&i){return -std::forward<T>(i);}};
+			constexpr auto Dereference{[]<typename T>(T&&i){return *std::forward<T>(i);}};
+			constexpr auto PrefixIncrease{[]<typename T>(T&&i){return ++std::forward<T>(i);}};
+			constexpr auto PostfixIncrease{[]<typename T>(T&&i){return std::forward<T>(i)++;}};
+			constexpr auto PrefixDecrease{[]<typename T>(T&&i){return --std::forward<T>(i);}};
+			constexpr auto PostfixDecrease{[]<typename T>(T&&i){return std::forward<T>(i)--;}};
+			constexpr auto IndirectAccess{[]<typename T>(T&&i){return std::forward<T>(i).operator->();}};
 		}
 		namespace OperationFunctors
 		{
 			/**
 			 * binary functors
 			 */
-			constexpr auto LessThan{[](auto i,auto j){return (i<j);}};
-			constexpr auto GreaterThan{[](auto i,auto j){return (i>j);}};
-			constexpr auto GreaterEqual{[](auto i,auto j){return i>=j;}};
-			constexpr auto LessEqual{[](auto i,auto j){return i<=j;}};
-			constexpr auto EqualTo{[](auto i,auto j){return i==j;}};
-			constexpr auto NotEqualTo{[](auto i,auto j){return i!=j;}};
-			constexpr auto CompareTo{[](auto i,auto j){return i<=>j;}};
-			constexpr auto Plus{[](auto i,auto j){return i+j;}};
-			constexpr auto Minus{[](auto i,auto j){return i-j;}};
-			constexpr auto Multiply{[](auto i,auto j){return i*j;}};
-			constexpr auto Divide{[](auto i,auto j){return i/j;}};
-			constexpr auto Modular{[](auto i,auto j){return i%j;}};
-			constexpr auto ExclusiveOr{[](auto i,auto j){return i^j;}};
-			constexpr auto And{[](auto i,auto j){return i&j;}};
-			constexpr auto Or{[](auto i,auto j){return i|j;}};
-			constexpr auto Assign{[](auto i,auto j){return i=j;}};
-			constexpr auto PlusBy{[](auto i,auto j){return i+=j;}};
-			constexpr auto MinusBy{[](auto i,auto j){return i-=j;}};
-			constexpr auto MultiplyBy{[](auto i,auto j){return i*=j;}};
-			constexpr auto DividedBy{[](auto i,auto j){return i/=j;}};
-			constexpr auto ModularBy{[](auto i,auto j){return i%=j;}};
-			constexpr auto ExclusiveOrBy{[](auto i,auto j){return i^=j;}};
-			constexpr auto AndBy{[](auto i,auto j){return i&=j;}};
-			constexpr auto OrBy{[](auto i,auto j){return i|=j;}};
-			constexpr auto LeftShift{[](auto i,auto j){return i<<j;}};
-			constexpr auto RightShift{[](auto i,auto j){return (i>>j);}};
-			constexpr auto RightShiftBy{[](auto i,auto j){return (i>>=j);}};
-			constexpr auto LeftShiftBy{[](auto i,auto j){return i<<=j;}};
-			constexpr auto ShortAnd{[](auto i,auto j){return i&&j;}};
-			constexpr auto ShortOr{[](auto i,auto j){return i||j;}};
-			constexpr auto Comma{[](auto i,auto j){return i,j;}};
-			constexpr auto DereferenceIndirectAccess{[](auto i,auto j){return i->*j;}};
+			constexpr auto LessThan{[]<typename L,typename R>(L&&i,R&&j){return (std::forward<L>(i)<std::forward<R>(j));}};
+			constexpr auto GreaterThan{[]<typename L,typename R>(L&&i,R&&j){return (std::forward<L>(i)>std::forward<R>(j));}};
+			constexpr auto GreaterEqual{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)>=std::forward<R>(j);}};
+			constexpr auto LessEqual{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)<=std::forward<R>(j);}};
+			constexpr auto EqualTo{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)==std::forward<R>(j);}};
+			constexpr auto NotEqualTo{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)!=std::forward<R>(j);}};
+			constexpr auto CompareTo{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)<=>std::forward<R>(j);}};
+			constexpr auto Plus{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)+std::forward<R>(j);}};
+			constexpr auto Minus{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)-std::forward<R>(j);}};
+			constexpr auto Multiply{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)*std::forward<R>(j);}};
+			constexpr auto Divide{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)/std::forward<R>(j);}};
+			constexpr auto Modular{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)%std::forward<R>(j);}};
+			constexpr auto ExclusiveOr{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)^std::forward<R>(j);}};
+			constexpr auto And{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)&std::forward<R>(j);}};
+			constexpr auto Or{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)|std::forward<R>(j);}};
+			constexpr auto Assign{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)=std::forward<R>(j);}};
+			constexpr auto PlusBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)+=std::forward<R>(j);}};
+			constexpr auto MinusBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)-=std::forward<R>(j);}};
+			constexpr auto MultiplyBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)*=std::forward<R>(j);}};
+			constexpr auto DividedBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)/=std::forward<R>(j);}};
+			constexpr auto ModularBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)%=std::forward<R>(j);}};
+			constexpr auto ExclusiveOrBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)^=std::forward<R>(j);}};
+			constexpr auto AndBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)&=std::forward<R>(j);}};
+			constexpr auto OrBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)|=std::forward<R>(j);}};
+			constexpr auto LeftShift{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)<<std::forward<R>(j);}};
+			constexpr auto RightShift{[]<typename L,typename R>(L&&i,R&&j){return (std::forward<L>(i)>>std::forward<R>(j));}};
+			constexpr auto RightShiftBy{[]<typename L,typename R>(L&&i,R&&j){return (std::forward<L>(i)>>=std::forward<R>(j));}};
+			constexpr auto LeftShiftBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)<<=std::forward<R>(j);}};
+			constexpr auto ShortAnd{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)&&std::forward<R>(j);}};
+			constexpr auto ShortOr{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)||std::forward<R>(j);}};
+			constexpr auto Comma{[]<typename L,typename R>(L&&i,R&&j){return (std::forward<L>(i),std::forward<R>(j));}};
+			constexpr auto DereferenceIndirectAccess{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)->*std::forward<R>(j);}};
 		}
 
 //		template<typename T>
@@ -212,9 +212,20 @@ namespace reverSilly
 
 			template<typename ...Args>
 			constexpr Variable(Args&&...args):value{std::forward<Args>(args)...}{}
+
+			using Expression<Variable<T>>::operator[];
+			using Expression<Variable<T>>::operator();
+			using Expression<Variable<T>>::operator=;
+			using Expression<Variable<T>>::operator->;
 		};
 		template<typename T>
-		struct Unknown:public Expression<Unknown<T>>{static constexpr std::size_t nParameterNeeded{1};};
+		struct Unknown:public Expression<Unknown<T>>
+		{
+			using Expression<Unknown<T>>::operator[];
+			using Expression<Unknown<T>>::operator();
+			using Expression<Unknown<T>>::operator=;
+			using Expression<Unknown<T>>::operator->;
+		};
 		template<typename T>
 		Unknown<T> it;
 
@@ -224,16 +235,18 @@ namespace reverSilly
 			[[no_unique_address]]F callee;
 			[[no_unique_address]]std::tuple<Args...> arguments;
 			Call(const F& func,const std::tuple<Args...>& args):callee{func},arguments{args}{}
+
+
+			using Expression<Call<F,Args...>>::operator[];
+			using Expression<Call<F,Args...>>::operator();
+			using Expression<Call<F,Args...>>::operator=;
+			using Expression<Call<F,Args...>>::operator->;
 		};
 		template<typename Me>
 		template<typename ...Args>
 		Call<Me,Args...>Expression<Me>::operator()(Args&&...args)
 		{
 			return Call<Me,Args...>{*reinterpret_cast<Me*>(this),std::forward_as_tuple(args...)};
-			//error: could not convert
-			// 'reverSilly::LambdaIt::Call<reverSilly::LambdaIt::Unknown<std::function<void(int)> >, int&>((*(const reverSilly::LambdaIt::Unknown<std::function<void(int)> >*)((reverSilly::LambdaIt::Unknown<std::function<void(int)> >*)((reverSilly::LambdaIt::Expression<reverSilly::LambdaIt::Unknown<std::function<void(int)> > >*)this))), std::forward_as_tuple(_Elements&& ...) [with _Elements = {int&}]())'
-			// from 'Call<[...],int&>'
-			// to 'Call<[...],int>'
 		}
 
 		template<typename A,typename ...I>
@@ -242,6 +255,11 @@ namespace reverSilly
 			[[no_unique_address]]A array;
 			[[no_unique_address]]std::tuple<I...>indices;
 			Subscript(const A& arr,const std::tuple<I...>&ind):array{arr},indices{ind}{}
+
+			using Expression<Subscript<A,I...>>::operator[];
+			using Expression<Subscript<A,I...>>::operator();
+			using Expression<Subscript<A,I...>>::operator=;
+			using Expression<Subscript<A,I...>>::operator->;
 		};
 		template<typename Me>
 		template<typename ...I>
@@ -255,8 +273,12 @@ namespace reverSilly
 		{
 			[[no_unique_address]]T operand;
 			constexpr explicit UnaryOperator(const T&thing):operand{thing}{}
+
+			using Expression<UnaryOperator<T,Op>>::operator[];
+			using Expression<UnaryOperator<T,Op>>::operator();
+			using Expression<UnaryOperator<T,Op>>::operator=;
+			using Expression<UnaryOperator<T,Op>>::operator->;
 		};
-		
 
 		template<typename T>
 		using Flip=UnaryOperator<T,OperationFunctors::Flip>;
@@ -315,7 +337,6 @@ namespace reverSilly
 		{
 			return IndirectAccess<Me>{*this};
 		}
-		
 
 		template<typename L,typename R,auto Op>
 		struct BinaryOperator:public Expression<BinaryOperator<L,R,Op>>
@@ -323,20 +344,11 @@ namespace reverSilly
 			[[no_unique_address]]L lhs;
 			[[no_unique_address]]R rhs;
 			constexpr BinaryOperator(const L& lhs,const R&rhs):lhs{lhs},rhs{rhs}{}
-//			template<typename ...Args>
-//			auto evaluate(Args&&...args)
-//			{
-////				static_assert(IsExpression<BinaryOperator>);
-//				static_assert(IsExpression<L>);
-//				static_assert(IsExpression<R>);
-//				constexpr size_t lparamn{function_traits<decltype(L::evaluate)>::nargs},rparamn{function_traits<decltype(R::evaluate)>::nargs};
-//				static_assert(lparamn+rparamn==sizeof...(Args));
-//				auto l{[this](auto &&...args){return lhs.evaluate(std::forward<decltype(args)>(args)...);}};
-//				auto r{[this](auto &&...args){return rhs.evaluate(std::forward<decltype(args)>(args)...);}};
-//				return Op(
-//						std::apply(l,get_first_n<lparamn>(std::forward<Args>(args)...)),
-//						std::apply(r,get_last_n<rparamn>(std::forward<Args>(args)...)));
-//			}
+
+			using Expression<BinaryOperator<L,R,Op>>::operator[];
+			using Expression<BinaryOperator<L,R,Op>>::operator();
+			using Expression<BinaryOperator<L,R,Op>>::operator=;
+			using Expression<BinaryOperator<L,R,Op>>::operator->;
 		};
 		template<typename L,typename R>
 		using LessThan=BinaryOperator<L,R,OperationFunctors::LessThan>;
@@ -571,6 +583,12 @@ namespace reverSilly
 				return get_evaluators_impl(args,std::make_index_sequence<sizeof...(Args)>{});
 			}
 
+
+			auto function_cat()
+			{
+				return []{};
+			}
+
 			template<typename F>
 			auto function_cat(F func)
 			{
@@ -620,8 +638,7 @@ namespace reverSilly
 							{
 								return [func1,func2](Arg1...args1,Arg2...args2)mutable
 								{
-									return std::tuple(std::forward<R1>(func1(args1...)),
-									                  std::forward<R2>(func2(args2...)));
+									return std::forward_as_tuple(func1(args1...),func2(args2...));
 								};
 							}
 						}(std::function(func2));
@@ -632,7 +649,7 @@ namespace reverSilly
 			template<typename ...T>
 			auto function_tuple_cat(std::tuple<T...>&&thing)
 			{
-				return std::apply([](auto... args){return function_cat<T...>(args...);},thing);
+				return std::apply([](auto... args){return function_cat(args...);},thing);
 			}
 		}
 		template<typename T>
@@ -645,7 +662,7 @@ namespace reverSilly
 		template<typename T>
 		auto getEvaluator(Unknown<T>)
 		{
-			return [](const T& thing){return thing;};
+			return [](const T& thing)->T{return thing;};
 		};
 
 		template<typename T>
@@ -688,16 +705,31 @@ namespace reverSilly
 		template<typename F,typename ...Params>
 		auto getEvaluator(Call<F,Params...>operation)
 		{
-			auto FEval{getEvaluator(operation.callee)};
-			auto ArgEval{function_tuple_cat(get_evaluators(operation.arguments))};
-			auto Eval{function_cat(FEval,ArgEval)};
-			return [&Eval]<typename R,typename ...Args>(std::function<R(Args...)>)mutable
+			if constexpr(sizeof...(Params))
 			{
-				return [Eval](Args...args)mutable
+				auto FEval{getEvaluator(operation.callee)};
+				auto ArgEval{function_tuple_cat(get_evaluators(operation.arguments))};
+				auto Eval{function_cat(FEval,ArgEval)};
+				return [&Eval]<typename R,typename ...Args>(std::function<R(Args...)>)mutable
 				{
-					return std::apply([](auto i,auto j){return std::apply(i,j);},Eval(args...));
-				};
-			}(std::function(Eval));
+					return [Eval](Args...args)mutable
+					{
+						return std::apply([](auto &&i,auto &&j){return std::apply(i,j);},Eval(args...));
+					};
+				}(std::function(Eval));
+			}
+			else
+			{
+				//no parameters
+				auto FEval{getEvaluator(operation.callee)};
+				return [&FEval]<typename R,typename ...Args>(std::function<R(Args...)>)
+				{
+					return [FEval](Args...args)
+					{
+						return FEval(args...)();
+					};
+				}(std::function(FEval));
+			}
 		};
 
 		template<typename A,typename ...I>
@@ -712,16 +744,17 @@ namespace reverSilly
 				{
 					return std::apply
 					(
-						[](auto i,auto j)
+						[](auto &&i,auto &&j)
 						{
 							return std::apply
 							(
 								[&i](auto ...args)
 								{
 									if constexpr(std::is_fundamental_v<decltype(i)>)
-//										return i[args...];
-//										static_assert(false);
-;
+									{
+										auto &&j{args...};
+										return i[j];
+									}
 									else
 										return (i.operator[](args...));
 								},

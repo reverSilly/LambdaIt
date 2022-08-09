@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "c:/Users/Administrator/CLionProjects/LambdaIt/cmake-build-debug"
+			"value" : "g:/Projects/LambdaIt/cmake-build-debug"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -623,7 +623,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "C:/Users/Administrator/CLionProjects/LambdaIt"
+			"value" : "G:/Projects/LambdaIt"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -663,7 +663,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/PROGRA~1/JETBRA~1/CLION2~1.2/bin/ninja/win/ninja.exe"
+			"value" : "C:/Program Files/JetBrains/CLion 2022.2/bin/ninja/win/ninja.exe"
 		},
 		{
 			"name" : "CMAKE_MODULE_LINKER_FLAGS",
@@ -1239,7 +1239,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/Administrator/CLionProjects/LambdaIt/cmake-build-debug"
+			"value" : "G:/Projects/LambdaIt/cmake-build-debug"
 		},
 		{
 			"name" : "LambdaIt_IS_TOP_LEVEL",
@@ -1263,7 +1263,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/Administrator/CLionProjects/LambdaIt"
+			"value" : "G:/Projects/LambdaIt"
 		}
 	],
 	"kind" : "cache",
