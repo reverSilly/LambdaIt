@@ -1,20 +1,28 @@
 #include <iostream>
 #include "SyntaxTree.hpp"
-using namespace reverSilly::LambdaIt;
+using namespace reverSilly;
 using namespace std;
+struct A
+{
+	int operator[](int a)
+	{
+		return a*2;
+	}
+};
 int main()
 {
-	auto i=(-it<int>);
-	cout<<i.evaluate(1);
+	using LambdaIt::it;
+
+	cout<< (it<int>).at(20);
 	/**
-	 * (Variable<int>(2)-it<int>)
+	 * (2-it<int>)
 	 * =>
 	 * int func(int it)
 	 * {
 	 * 		return 2-it;
 	 * }
 	 *
-	 * (Variable<int>(2)-it<int>).evaluate(1)
+	 * getEvaluator(2-it<int>)
 	 * =>
 	 * func(1)
 	 */

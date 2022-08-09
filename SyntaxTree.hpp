@@ -6,6 +6,8 @@
 #include <tuple>
 #include <functional>
 
+#include <iostream>
+
 namespace reverSilly
 {
 	namespace LambdaIt
@@ -15,17 +17,17 @@ namespace reverSilly
 			template<typename T>
 			struct function_traits;
 
-			template<typename R, typename ...Args>
+			template<typename R,typename ...Args>
 			struct function_traits<std::function<R(Args...)>>
 			{
 				static constexpr size_t nargs=sizeof...(Args);
 				using result_type=R;
+				using tuple_args=std::tuple<Args...>;
 				// 输入参数类型,i为从0开始的参数类型索引
 				template <size_t i>
 				struct arg
-				{using type=typename std::tuple_element<i,std::tuple<Args...>>::type;};
+				{using type=typename std::tuple_element<i,tuple_args>::type;};
 			};
-
 
 			template<typename T,typename R, typename ...Args>
 			struct function_traits<R(T::*)(Args...)>
@@ -44,145 +46,36 @@ namespace reverSilly
 				static constexpr size_t nargs=sizeof...(Args);
 				// 返回类型
 				using result_type=R;
-
 				using member_type=T;
-
 				// 输入参数类型,i为从0开始的参数类型索引
 				template <size_t i>
-				struct arg
-				{
-					using type=typename std::tuple_element<i,std::tuple<Args...>>::type;
-				};
+				struct arg{using type=typename std::tuple_element<i,std::tuple<Args...>>::type;};
 			};
 
-			template<typename T,std::size_t...indices>
-			auto get_first_n_impl(T&& thing,std::index_sequence<indices...>)
+			template<std::size_t beg,typename T,std::size_t...indices>
+			auto get_first_n_since_impl(T&& thing,std::index_sequence<indices...>)
 			{
-				return std::tuple(std::get<indices>(std::forward<T>(thing))...);
+				return std::tuple(std::get<beg+indices>(std::forward<T>(thing))...);
 			}
 
-			template<std::size_t index,typename ...Args>
+			template<std::size_t beg,std::size_t n,typename ...Args>
+			auto get_first_n_since(Args&&...args)
+			{
+				return get_first_n_since_impl<beg>(std::forward_as_tuple(args...),std::make_index_sequence<n>{});
+			}
+
+			template<std::size_t n,typename ...Args>
 			auto get_first_n(Args&&...args)
 			{
-				return get_first_n_impl(std::forward_as_tuple(args...),std::make_index_sequence<index>{});
+				return get_first_n_since<0,n>(std::forward<Args>(args)...);
 			}
 
-			template<std::size_t n,typename T,std::size_t...indices>
-			auto get_last_n_impl(T&& thing,std::index_sequence<indices...>)
-			{
-				return std::tuple(std::get<sizeof...(indices)-n+indices>(std::forward<T>(thing))...);
-			}
-
-			template<std::size_t index,typename ...Args>
+			template<std::size_t n,typename ...Args>
 			auto get_last_n(Args&&...args)
 			{
-				return get_last_n_impl<sizeof...(Args)>(std::forward_as_tuple(args...),std::make_index_sequence<index>{});
+				return get_first_n_since<sizeof...(Args)-n,n>(std::forward_as_tuple(args...),std::make_index_sequence<n>{});
 			}
-
-			/**
-			 * applies an member function with parameters in a tuple
-			 */
-//			template<typename T,typename R,typename ...Args,std::size_t ...indices>
-//			R apply_impl(R(T::)(Args...),,std::index_sequence<indices...>)
-//			{
-//
-//			};
-
-//			template<typename F,typename T,typename ...Args>
-//			struct apply_impl;
-//			template<typename T,typename R,typename ...Args>
-//			struct apply_impl<R(T::*)(Args...),T,Args...>
-//			{
-//				static R apply(R(T::*mem)(Args...),T* object,std::tuple<Args&&...>&&param)
-//				{
-//					return std::apply(std::mem_fn(mem),std::tuple_cat(std::tuple(object,param)));
-//				}
-//			};
-//			template<typename T,typename R,typename ...Args>
-//			struct apply_impl<R(T::*)(Args...)const,T,Args...>
-//			{
-//				static R apply(R(T::*mem)(Args...)const,T* object,std::tuple<Args&&...>&&param)
-//				{
-//					return std::apply(std::mem_fn(mem),std::tuple_cat(std::tuple(object,param)));
-//				}
-//			};
-//
-//			template<typename F,typename T,typename ...Args>
-//			auto apply(F mem,T* object,std::tuple<Args...>&&param)
-//			{
-//				return apply_impl<F,T,Args...>::apply(mem,object,param);
-//			};
 		}
-
-		template<typename T>
-		concept IsExpression=std::is_member_function_pointer_v<decltype(&T::evaluate)>;
-		
-		template<typename L,typename R>
-		struct Assign;
-		template<typename T>
-		struct IndirectAccess;
-		
-		template<typename Me>
-		struct Expression
-		{
-			template<typename T>
-			Assign<Me,T> operator=(const T &that);
-
-			IndirectAccess<Me> operator->();
-		};
-
-		template<typename T>
-		struct Variable:public Expression<Variable<T>>
-		{
-			T& evaluate()
-			{
-				return value;
-			}
-			operator T&()
-			{
-				return value;
-			}
-			[[no_unique_address]]T value;
-		public:
-			template<typename ...Args>
-			constexpr Variable(Args&&...args):value{std::forward<Args>(args)...}{}
-		};
-		template<typename T>
-		struct Unknown:public Expression<Unknown<T>>
-		{
-			T evaluate(T thing) const
-			{
-//				value=&thing;
-//				return *value;
-				return std::forward<T>(thing);
-			}
-//			T& evaluate()
-//			{
-//				return *value;
-//			}
-//			operator T&()
-//			{
-//				return *value;
-//			}
-//			T* value;
-		};
-
-		template<typename T>
-		Unknown<T> it;
-
-		template<typename Me,typename T,auto Op>
-		struct UnaryOperator:public Expression<Me>
-		{
-			[[no_unique_address]]T operand;
-			constexpr explicit UnaryOperator(const T&thing):operand{thing}{}
-			template<typename ...Args>
-			auto evaluate(Args&&...args)
-			{
-//				static_assert(IsExpression<UnaryOperator>);
-				static_assert(IsExpression<T>);
-				return Op(operand.evaluate(std::forward<Args>(args)...));
-			}
-		};
 		
 		namespace OperationFunctors
 		{
@@ -201,119 +94,6 @@ namespace reverSilly
 			constexpr auto PostfixDecrease{[](auto i){return i--;}};
 			constexpr auto IndirectAccess{[](auto i){return i.operator->();}};
 		}
-
-		template<typename T>
-		struct Flip:public UnaryOperator<Flip<T>,T,OperationFunctors::Flip>
-		{
-			constexpr explicit Flip(const T &thing):UnaryOperator<Flip<T>,T,OperationFunctors::Flip>(thing){}
-		};
-		template<typename T>
-		auto operator~(const T&thing){return Flip{thing};}
-		
-		template<typename T>
-		struct Not:public UnaryOperator<Not<T>,T,OperationFunctors::Not>
-		{
-			constexpr explicit Not(const T &thing):UnaryOperator<Not<T>,T,OperationFunctors::Not>(thing){}
-		};
-		template<typename T>
-		Not<T> operator!(const T&thing){return Not{thing};}
-		
-		template<typename T>
-		struct AddressOf:public UnaryOperator<AddressOf<T>,T,OperationFunctors::AddressOf>
-		{
-			constexpr explicit AddressOf(const T &thing):UnaryOperator<AddressOf<T>,T,OperationFunctors::AddressOf>(thing){}
-		};
-		template<typename T>
-		AddressOf<T> operator&(const T&thing){return AddressOf{thing};}
-		
-		template<typename T>
-		struct Positive:public UnaryOperator<Positive<T>,T,OperationFunctors::Positive>
-		{
-			constexpr explicit Positive(const T &thing):UnaryOperator<Positive<T>,T,OperationFunctors::Positive>(thing){}
-		};
-		template<typename T>
-		Positive<T> operator+(const T&thing){return Positive{thing};}
-		
-		template<typename T>
-		struct Negative:public UnaryOperator<Negative<T>,T,OperationFunctors::Negative>
-		{
-			constexpr explicit Negative(const T &thing):UnaryOperator<Negative<T>,T,OperationFunctors::Negative>(thing){}
-		};
-		template<typename T>
-		Negative<T> operator-(const T&thing){return Negative{thing};}
-		
-		template<typename T>
-		struct Dereference:public UnaryOperator<Dereference<T>,T,OperationFunctors::Dereference>
-		{
-			constexpr explicit Dereference(const T &thing):UnaryOperator<Dereference<T>,T,OperationFunctors::Dereference>(thing){}
-		};
-		template<typename T>
-		Dereference<T> operator*(const T&thing){return Dereference{thing};}
-		
-		template<typename T>
-		struct PrefixIncrease:public UnaryOperator<PrefixIncrease<T>,T,OperationFunctors::PrefixIncrease>
-		{
-			constexpr explicit PrefixIncrease(const T &thing):UnaryOperator<PrefixIncrease<T>,T,OperationFunctors::PrefixIncrease>(thing){}
-		};
-		template<typename T>
-		auto operator++(const T&thing,int){return PrefixIncrease{thing};}
-		
-		template<typename T>
-		struct PostfixIncrease:public UnaryOperator<PostfixIncrease<T>,T,OperationFunctors::PostfixIncrease>
-		{
-			constexpr explicit PostfixIncrease(const T &thing):UnaryOperator<PostfixIncrease<T>,T,OperationFunctors::PostfixIncrease>(thing){}
-		};
-		template<typename T>
-		auto operator++(const T&thing){return PostfixIncrease{thing};}
-		
-		template<typename T>
-		struct PrefixDecrease:public UnaryOperator<PrefixDecrease<T>,T,OperationFunctors::PrefixDecrease>
-		{
-			constexpr explicit PrefixDecrease(const T &thing):UnaryOperator<PrefixDecrease<T>,T,OperationFunctors::PrefixDecrease>(thing){}
-		};
-		template<typename T>
-		auto operator--(const T&thing,int){return PrefixDecrease{thing};}
-		
-		template<typename T>
-		struct PostfixDecrease:public UnaryOperator<PostfixDecrease<T>,T,OperationFunctors::PostfixDecrease>
-		{
-			constexpr explicit PostfixDecrease(const T &thing):UnaryOperator<PostfixDecrease<T>,T,OperationFunctors::PostfixDecrease>(thing){}
-		};
-		template<typename T>
-		auto operator--(const T&thing){return PostfixDecrease{thing};}
-		
-		template<typename T>
-		struct IndirectAccess:public UnaryOperator<IndirectAccess<T>,T,OperationFunctors::IndirectAccess>
-		{
-			constexpr explicit IndirectAccess(const T &thing):UnaryOperator<IndirectAccess<T>,T,OperationFunctors::IndirectAccess>(thing){}
-		};
-		template<typename Me>
-		IndirectAccess<Me> Expression<Me>::operator->()
-		{
-			return IndirectAccess<Me>{*this};
-		}
-		
-
-		template<typename Me,typename L,typename R,auto Op>
-		struct BinaryOperator:public Expression<Me>
-		{
-			[[no_unique_address]]L lhs;
-			[[no_unique_address]]R rhs;
-			constexpr BinaryOperator(const L& lhs,const R&rhs):lhs{lhs},rhs{rhs}{}
-			template<typename ...Args>
-			auto evaluate(Args&&...args)
-			{
-//				static_assert(IsExpression<BinaryOperator>);
-				static_assert(IsExpression<L>);
-				static_assert(IsExpression<R>);
-				constexpr size_t lparamn{function_traits<decltype(L::evaluate)>::nargs},rparamn{function_traits<decltype(R::evaluate)>::nargs};
-				static_assert(lparamn+rparamn==sizeof...(Args));
-				auto l{[this](auto &&...args){return lhs.evaluate(std::forward<decltype(args)>(args)...);}};
-				auto r{[this](auto &&...args){return rhs.evaluate(std::forward<decltype(args)>(args)...);}};
-				return Op(std::apply(l,get_first_n<lparamn>(std::forward<Args>(args)...)),
-			std::apply(r,get_last_n<rparamn>(std::forward<Args>(args)...)));
-			}
-		};
 		namespace OperationFunctors
 		{
 			/**
@@ -352,130 +132,289 @@ namespace reverSilly
 			constexpr auto Comma{[](auto i,auto j){return i,j;}};
 			constexpr auto DereferenceIndirectAccess{[](auto i,auto j){return i->*j;}};
 		}
+
+//		template<typename T>
+////		concept IsExpression=std::is_member_function_pointer_v<decltype(&T::evaluate)>;
+////		^
+////      | old one
+//		concept IsExpression=true;
+
+
+		template<typename T,auto Op>
+		struct UnaryOperator;
+		template<typename L,typename R,auto Op>
+		struct BinaryOperator;
+		template<typename T>
+		struct Unknown;
+		template<typename T>
+		struct Variable;
+		template<typename F,typename ...Args>
+		struct Call;
+		template<typename A,typename ...I>
+		struct Subscript;
+
+		template<typename T>
+		auto getEvaluator(T&& thing);
+		template<typename T>
+		auto getEvaluator(Unknown<T>);
+		template<typename T>
+		auto getEvaluator(Variable<T>thing);
+		template<typename L,typename R,auto Op>
+		auto getEvaluator(BinaryOperator<L,R,Op> operation);
+		template<typename T,auto Op>
+		auto getEvaluator(UnaryOperator<T,Op>operation);
+		template<typename F,typename ...Params>
+		auto getEvaluator(Call<F,Params...>operation);
+		template<typename A,typename ...I>
+		auto getEvaluator(Subscript<A,I...>operation);
+		
+		template<typename T>
+		using IndirectAccess=UnaryOperator<T,OperationFunctors::IndirectAccess>;
 		template<typename L,typename R>
-		struct LessThan:public BinaryOperator<LessThan<L,R>,L,R,OperationFunctors::LessThan>
+		using Assign=BinaryOperator<L,R,OperationFunctors::Assign>;
+		
+		template<typename Me>
+		struct Expression
 		{
-		public:
-			constexpr LessThan(const L&lhs,const R&rhs):BinaryOperator<LessThan<L,R>,L,R,OperationFunctors::LessThan>(lhs,rhs){}
+			template<typename T>
+			Assign<Me,T> operator=(const T &that);
+
+			IndirectAccess<Me> operator->();
+
+			template<typename ...Args>
+			Call<Me,Args...> operator()(Args&&...args);
+
+			template<typename ...I>
+			Subscript<Me,I...> operator[](I&&...i);
+
+			auto get()const
+			{
+				return getEvaluator(*reinterpret_cast<const Me*>(this));
+			}
+
+			template<typename ...Args>
+			auto at(Args&&...args)const
+			{
+				return get()(std::forward<Args>(args)...);
+			}
+
+			operator auto() const
+			{
+				return get();
+			}
+		};
+
+		template<typename T>
+		struct Variable:public Expression<Variable<T>>
+		{
+			operator T&(){return value;}
+			[[no_unique_address]]T value;
+
+			template<typename ...Args>
+			constexpr Variable(Args&&...args):value{std::forward<Args>(args)...}{}
+		};
+		template<typename T>
+		struct Unknown:public Expression<Unknown<T>>{static constexpr std::size_t nParameterNeeded{1};};
+		template<typename T>
+		Unknown<T> it;
+
+		template<typename F,typename ...Args>
+		struct Call:public Expression<Call<F,Args...>>
+		{
+			[[no_unique_address]]F callee;
+			[[no_unique_address]]std::tuple<Args...> arguments;
+			Call(const F& func,const std::tuple<Args...>& args):callee{func},arguments{args}{}
+		};
+		template<typename Me>
+		template<typename ...Args>
+		Call<Me,Args...>Expression<Me>::operator()(Args&&...args)
+		{
+			return Call<Me,Args...>{*reinterpret_cast<Me*>(this),std::forward_as_tuple(args...)};
+			//error: could not convert
+			// 'reverSilly::LambdaIt::Call<reverSilly::LambdaIt::Unknown<std::function<void(int)> >, int&>((*(const reverSilly::LambdaIt::Unknown<std::function<void(int)> >*)((reverSilly::LambdaIt::Unknown<std::function<void(int)> >*)((reverSilly::LambdaIt::Expression<reverSilly::LambdaIt::Unknown<std::function<void(int)> > >*)this))), std::forward_as_tuple(_Elements&& ...) [with _Elements = {int&}]())'
+			// from 'Call<[...],int&>'
+			// to 'Call<[...],int>'
+		}
+
+		template<typename A,typename ...I>
+		struct Subscript:public Expression<Subscript<A,I...>>
+		{
+			[[no_unique_address]]A array;
+			[[no_unique_address]]std::tuple<I...>indices;
+			Subscript(const A& arr,const std::tuple<I...>&ind):array{arr},indices{ind}{}
+		};
+		template<typename Me>
+		template<typename ...I>
+		Subscript<Me,I...> Expression<Me>::operator[](I &&...i)
+		{
+			return Subscript<Me,I...>{*reinterpret_cast<Me*>(this),std::forward_as_tuple(i...)};
+		}
+
+		template<typename T,auto Op>
+		struct UnaryOperator:public Expression<UnaryOperator<T,Op>>
+		{
+			[[no_unique_address]]T operand;
+			constexpr explicit UnaryOperator(const T&thing):operand{thing}{}
+		};
+		
+
+		template<typename T>
+		using Flip=UnaryOperator<T,OperationFunctors::Flip>;
+		template<typename T>
+		auto operator~(const T&thing){return Flip<T>{thing};}
+		
+		template<typename T>
+		using Not=UnaryOperator<T,OperationFunctors::Not>;
+		template<typename T>
+		Not<T> operator!(const T&thing){return Not<T>{thing};}
+		
+		template<typename T>
+		using AddressOf=UnaryOperator<T,OperationFunctors::AddressOf>;
+		template<typename T>
+		AddressOf<T> operator&(const T&thing){return AddressOf<T>{thing};}
+		
+		template<typename T>
+		using Positive=UnaryOperator<T,OperationFunctors::Positive>;
+		template<typename T>
+		Positive<T> operator+(const T&thing){return Positive<T>{thing};}
+		
+		template<typename T>
+		using Negative=UnaryOperator<T,OperationFunctors::Negative>;
+		template<typename T>
+		Negative<T> operator-(const T&thing){return Negative<T>{thing};}
+		
+		template<typename T>
+		using Dereference=UnaryOperator<T,OperationFunctors::Dereference>;
+		template<typename T>
+		Dereference<T> operator*(const T&thing){return Dereference<T>{thing};}
+		
+		template<typename T>
+		using PrefixIncrease=UnaryOperator<T,OperationFunctors::PrefixIncrease>;
+		template<typename T>
+		auto operator++(const T&thing){return PrefixIncrease<T>{thing};}
+		
+		template<typename T>
+		using PostfixIncrease=UnaryOperator<T,OperationFunctors::PostfixIncrease>;
+		template<typename T>
+		auto operator++(const T&thing,int){return PostfixIncrease<T>{thing};}
+		
+		template<typename T>
+		using PrefixDecrease=UnaryOperator<T,OperationFunctors::PrefixDecrease>;
+		template<typename T>
+		auto operator--(const T&thing){return PrefixDecrease<T>{thing};}
+		
+		template<typename T>
+		using PostfixDecrease=UnaryOperator<T,OperationFunctors::PostfixDecrease>;
+		template<typename T>
+		auto operator--(const T&thing,int){return PostfixDecrease<T>{thing};}
+		
+		template<typename T>
+		using IndirectAccess=UnaryOperator<T,OperationFunctors::IndirectAccess>;
+		template<typename Me>
+		IndirectAccess<Me> Expression<Me>::operator->()
+		{
+			return IndirectAccess<Me>{*this};
+		}
+		
+
+		template<typename L,typename R,auto Op>
+		struct BinaryOperator:public Expression<BinaryOperator<L,R,Op>>
+		{
+			[[no_unique_address]]L lhs;
+			[[no_unique_address]]R rhs;
+			constexpr BinaryOperator(const L& lhs,const R&rhs):lhs{lhs},rhs{rhs}{}
+//			template<typename ...Args>
+//			auto evaluate(Args&&...args)
+//			{
+////				static_assert(IsExpression<BinaryOperator>);
+//				static_assert(IsExpression<L>);
+//				static_assert(IsExpression<R>);
+//				constexpr size_t lparamn{function_traits<decltype(L::evaluate)>::nargs},rparamn{function_traits<decltype(R::evaluate)>::nargs};
+//				static_assert(lparamn+rparamn==sizeof...(Args));
+//				auto l{[this](auto &&...args){return lhs.evaluate(std::forward<decltype(args)>(args)...);}};
+//				auto r{[this](auto &&...args){return rhs.evaluate(std::forward<decltype(args)>(args)...);}};
+//				return Op(
+//						std::apply(l,get_first_n<lparamn>(std::forward<Args>(args)...)),
+//						std::apply(r,get_last_n<rparamn>(std::forward<Args>(args)...)));
+//			}
 		};
 		template<typename L,typename R>
-		auto operator<(const L&lhs,const R&rhs){return LessThan(lhs,rhs);}
+		using LessThan=BinaryOperator<L,R,OperationFunctors::LessThan>;
+		template<typename L,typename R>
+		auto operator<(const L&lhs,const R&rhs){return LessThan<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct GreaterThan:public BinaryOperator<GreaterThan<L,R>,L,R,OperationFunctors::GreaterThan>
-		{
-			constexpr GreaterThan(const L &lhs,const R &rhs):BinaryOperator<GreaterThan<L,R>,L,R,OperationFunctors::GreaterThan>{lhs,rhs}{}
-		};
+		using GreaterThan=BinaryOperator<L,R,OperationFunctors::GreaterThan>;
 		template<typename L,typename R>
-		auto operator>(const L&lhs,const R&rhs){return GreaterThan(lhs,rhs);}
-		template<typename L,typename R>
-		struct GreaterEqual:public BinaryOperator<GreaterEqual<L,R>,L,R,OperationFunctors::GreaterEqual>
-		{
-			constexpr GreaterEqual(const L &lhs,const R &rhs):BinaryOperator<GreaterEqual<L,R>,L,R,OperationFunctors::GreaterEqual>{lhs,rhs}{}
-		};
-		template<typename L,typename R>
-		auto operator>=(const L&lhs,const R&rhs){return GreaterEqual(lhs,rhs);}
+		auto operator>(const L&lhs,const R&rhs){return GreaterThan<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct LessEqual:public BinaryOperator<LessEqual<L,R>,L,R,OperationFunctors::LessEqual>
-		{
-			constexpr LessEqual(const L &lhs,const R &rhs):BinaryOperator<LessEqual<L,R>,L,R,OperationFunctors::LessEqual>{lhs,rhs}{}
-		};
-		template<typename L,typename R>
-		auto operator<=(const L&lhs,const R&rhs){return LessEqual(lhs,rhs);}
-		template<typename L,typename R>
-		struct EqualTo:public BinaryOperator<EqualTo<L,R>,L,R,OperationFunctors::EqualTo>
-		{
-			constexpr EqualTo(const L &lhs,const R &rhs):BinaryOperator<EqualTo<L,R>,L,R,OperationFunctors::EqualTo>{lhs,rhs}{}
-		};
-		template<typename L,typename R>
-		auto operator==(const L&lhs,const R&rhs){return EqualTo(lhs,rhs);}
+		using GreaterEqual=BinaryOperator<L,R,OperationFunctors::GreaterEqual>;
 		
 		template<typename L,typename R>
-		struct NotEqualTo:public BinaryOperator<NotEqualTo<L,R>,L,R,OperationFunctors::NotEqualTo>
-		{
-			constexpr NotEqualTo(const L &lhs,const R &rhs):BinaryOperator<NotEqualTo<L,R>,L,R,OperationFunctors::NotEqualTo>{lhs,rhs}{}
-		};
-		template<typename L,typename R>
-		auto operator!=(const L&lhs,const R&rhs){return NotEqualTo(lhs,rhs);}
+		auto operator>=(const L&lhs,const R&rhs){return GreaterEqual<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct CompareTo:public BinaryOperator<CompareTo<L,R>,L,R,OperationFunctors::CompareTo>
-		{
-			constexpr CompareTo(const L &lhs,const R &rhs):BinaryOperator<CompareTo<L,R>,L,R,OperationFunctors::CompareTo>{lhs,rhs}{}
-		};
+		using LessEqual=BinaryOperator<L,R,OperationFunctors::LessEqual>;
 		template<typename L,typename R>
-		auto operator<=>(const L&lhs,const R&rhs){return CompareTo(lhs,rhs);}
+		auto operator<=(const L&lhs,const R&rhs){return LessEqual<L,R>(lhs,rhs);}
+		template<typename L,typename R>
+		using EqualTo=BinaryOperator<L,R,OperationFunctors::EqualTo>;
+		template<typename L,typename R>
+		auto operator==(const L&lhs,const R&rhs){return EqualTo<L,R>(lhs,rhs);}
+		
+		template<typename L,typename R>
+		using NotEqualTo=BinaryOperator<L,R,OperationFunctors::NotEqualTo>;
+		template<typename L,typename R>
+		auto operator!=(const L&lhs,const R&rhs){return NotEqualTo<L,R>(lhs,rhs);}
+		
+		template<typename L,typename R>
+		using CompareTo=BinaryOperator<L,R,OperationFunctors::CompareTo>;
+		template<typename L,typename R>
+		auto operator<=>(const L&lhs,const R&rhs){return CompareTo<L,R>(lhs,rhs);}
 
 		template<typename L,typename R>
-		struct Plus:public BinaryOperator<Plus<L,R>,L,R,OperationFunctors::Plus>
-		{
-			constexpr Plus(const L&lhs,const R&rhs):BinaryOperator<Plus<L,R>,L,R,OperationFunctors::Plus>(lhs,rhs){}
-		};
+		using Plus=BinaryOperator<L,R,OperationFunctors::Plus>;
 		template<typename L,typename R>
-		auto operator+(const L&lhs,const R&rhs){return Plus(lhs,rhs);}
+		auto operator+(const L&lhs,const R&rhs){return Plus<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct Minus:public BinaryOperator<Minus<L,R>,L,R,OperationFunctors::Minus>
-		{
-			constexpr Minus(const L &lhs,const R &rhs):BinaryOperator<Minus<L,R>,L,R,OperationFunctors::Minus>{lhs,rhs}{}
-		};
+		using Minus=BinaryOperator<L,R,OperationFunctors::Minus>;
 		template<typename L,typename R>
-		auto operator-(const L&lhs,const R&rhs){return Minus(lhs,rhs);}
+		auto operator-(const L&lhs,const R&rhs){return Minus<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct Multiply:public BinaryOperator<Multiply<L,R>,L,R,OperationFunctors::Multiply>
-		{
-			constexpr Multiply(const L &lhs,const R &rhs):BinaryOperator<Multiply<L,R>,L,R,OperationFunctors::Multiply>(lhs,rhs){}
-		};
+		using Multiply=BinaryOperator<L,R,OperationFunctors::Multiply>;
 		template<typename L,typename R>
-		auto operator*(const L&lhs,const R&rhs){return Multiply(lhs,rhs);}
+		auto operator*(const L&lhs,const R&rhs){return Multiply<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct Divide:public BinaryOperator<Divide<L,R>,L,R,OperationFunctors::Divide>
-		{
-			constexpr Divide(const L &lhs,const R &rhs):BinaryOperator<Divide<L,R>,L,R,OperationFunctors::Divide>{lhs,rhs}{}
-		};
+		using Divide=BinaryOperator<L,R,OperationFunctors::Divide>;
 		template<typename L,typename R>
-		auto operator/(const L&lhs,const R&rhs){return Divide(lhs,rhs);}
+		auto operator/(const L&lhs,const R&rhs){return Divide<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct Modular:public BinaryOperator<Modular<L,R>,L,R,OperationFunctors::Modular>
-		{
-			constexpr Modular(const L &lhs,const R &rhs):BinaryOperator<Modular<L,R>,L,R,OperationFunctors::Modular>{lhs,rhs}{}
-		};
+		using Modular=BinaryOperator<L,R,OperationFunctors::Modular>;
 		template<typename L,typename R>
-		auto operator%(const L&lhs,const R&rhs){return Modular(lhs,rhs);}
+		auto operator%(const L&lhs,const R&rhs){return Modular<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct ExclusiveOr:public BinaryOperator<ExclusiveOr<L,R>,L,R,OperationFunctors::ExclusiveOr>
-		{
-			constexpr ExclusiveOr(const L &lhs,const R &rhs):BinaryOperator<ExclusiveOr<L,R>,L,R,OperationFunctors::ExclusiveOr>{lhs,rhs}{}
-		};
+		using ExclusiveOr=BinaryOperator<L,R,OperationFunctors::ExclusiveOr>;
 		template<typename L,typename R>
-		auto operator^(const L&lhs,const R&rhs){return ExclusiveOr(lhs,rhs);}
+		auto operator^(const L&lhs,const R&rhs){return ExclusiveOr<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct And:public BinaryOperator<And<L,R>,L,R,OperationFunctors::And>
-		{
-			constexpr And(const L &lhs,const R &rhs):BinaryOperator<And<L,R>,L,R,OperationFunctors::And>{lhs,rhs}{}
-		};
+		using And=BinaryOperator<L,R,OperationFunctors::And>;
 		template<typename L,typename R>
-		auto operator&(const L&lhs,const R&rhs){return And(lhs,rhs);}
+		auto operator&(const L&lhs,const R&rhs){return And<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct Or:public BinaryOperator<Or<L,R>,L,R,OperationFunctors::Or>
-		{
-			constexpr Or(const L &lhs,const R &rhs):BinaryOperator<Or<L,R>,L,R,OperationFunctors::Or>{lhs,rhs}{}
-		};
+		using Or=BinaryOperator<L,R,OperationFunctors::Or>;
 		template<typename L,typename R>
-		auto operator|(const L&lhs,const R&rhs){return Or(lhs,rhs);}
+		auto operator|(const L&lhs,const R&rhs){return Or<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct Assign:public BinaryOperator<Assign<L,R>,L,R,OperationFunctors::Assign>
-		{
-			constexpr Assign(const L &lhs,const R &rhs):BinaryOperator<Assign<L,R>,L,R,OperationFunctors::Assign>{lhs,rhs}{}
-		};
+		using Assign=BinaryOperator<L,R,OperationFunctors::Assign>;
 		template<typename Me>
 		template<typename T>
 		Assign<Me,T> Expression<Me>::operator=(const T &that)
@@ -484,131 +423,314 @@ namespace reverSilly
 		}
 		
 		template<typename L,typename R>
-		struct PlusBy:public BinaryOperator<PlusBy<L,R>,L,R,OperationFunctors::PlusBy>
-		{
-			constexpr PlusBy(const L &lhs,const R &rhs):BinaryOperator<PlusBy<L,R>,L,R,OperationFunctors::PlusBy>{lhs,rhs}{}
-		};
+		using PlusBy=BinaryOperator<L,R,OperationFunctors::PlusBy>;
 		template<typename L,typename R>
-		auto operator+=(const L&lhs,const R&rhs){return PlusBy(lhs,rhs);}
+		auto operator+=(const L&lhs,const R&rhs){return PlusBy<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct MinusBy:public BinaryOperator<MinusBy<L,R>,L,R,OperationFunctors::MinusBy>
-		{
-			constexpr MinusBy(const L &lhs,const R &rhs):BinaryOperator<MinusBy<L,R>,L,R,OperationFunctors::MinusBy>{lhs,rhs}{}
-		};
+		using MinusBy=BinaryOperator<L,R,OperationFunctors::MinusBy>;
 		template<typename L,typename R>
-		auto operator-=(const L&lhs,const R&rhs){return MinusBy(lhs,rhs);}
+		auto operator-=(const L&lhs,const R&rhs){return MinusBy<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct MultiplyBy:public BinaryOperator<MultiplyBy<L,R>,L,R,OperationFunctors::MultiplyBy>
-		{
-			constexpr MultiplyBy(const L &lhs,const R &rhs):BinaryOperator<MultiplyBy<L,R>,L,R,OperationFunctors::MultiplyBy>{lhs,rhs}{}
-		};
+		using MultiplyBy=BinaryOperator<L,R,OperationFunctors::MultiplyBy>;
 		template<typename L,typename R>
-		auto operator*=(const L&lhs,const R&rhs){return MultiplyBy(lhs,rhs);}
+		auto operator*=(const L&lhs,const R&rhs){return MultiplyBy<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct DividedBy:public BinaryOperator<DividedBy<L,R>,L,R,OperationFunctors::DividedBy>
-		{
-			constexpr DividedBy(const L &lhs,const R &rhs):BinaryOperator<DividedBy<L,R>,L,R,OperationFunctors::DividedBy>{lhs,rhs}{}
-		};
+		using DividedBy=BinaryOperator<L,R,OperationFunctors::DividedBy>;
 		template<typename L,typename R>
-		auto operator/=(const L&lhs,const R&rhs){return DividedBy(lhs,rhs);}
+		auto operator/=(const L&lhs,const R&rhs){return DividedBy<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct ModularBy:public BinaryOperator<ModularBy<L,R>,L,R,OperationFunctors::ModularBy>
-		{
-			constexpr ModularBy(const L &lhs,const R &rhs):BinaryOperator<ModularBy<L,R>,L,R,OperationFunctors::ModularBy>{lhs,rhs}{}
-		};
+		using ModularBy=BinaryOperator<L,R,OperationFunctors::ModularBy>;
 		template<typename L,typename R>
-		auto operator%=(const L&lhs,const R&rhs){return ModularBy(lhs,rhs);}
+		auto operator%=(const L&lhs,const R&rhs){return ModularBy<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct ExclusiveOrBy:public BinaryOperator<ExclusiveOrBy<L,R>,L,R,OperationFunctors::ExclusiveOrBy>
-		{
-			constexpr ExclusiveOrBy(const L &lhs,const R &rhs):BinaryOperator<ExclusiveOrBy<L,R>,L,R,OperationFunctors::ExclusiveOrBy>{lhs,rhs}{}
-		};
+		using ExclusiveOrBy=BinaryOperator<L,R,OperationFunctors::ExclusiveOrBy>;
 		template<typename L,typename R>
-		auto operator^=(const L&lhs,const R&rhs){return ExclusiveOrBy(lhs,rhs);}
+		auto operator^=(const L&lhs,const R&rhs){return ExclusiveOrBy<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct AndBy:public BinaryOperator<AndBy<L,R>,L,R,OperationFunctors::AndBy>
-		{
-			constexpr AndBy(const L &lhs,const R &rhs):BinaryOperator<AndBy<L,R>,L,R,OperationFunctors::AndBy>{lhs,rhs}{}
-		};
+		using AndBy=BinaryOperator<L,R,OperationFunctors::AndBy>;
 		template<typename L,typename R>
-		auto operator&=(const L&lhs,const R&rhs){return AndBy(lhs,rhs);}
+		auto operator&=(const L&lhs,const R&rhs){return AndBy<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct OrBy:public BinaryOperator<OrBy<L,R>,L,R,OperationFunctors::OrBy>
-		{
-			constexpr OrBy(const L &lhs,const R &rhs):BinaryOperator<OrBy<L,R>,L,R,OperationFunctors::OrBy>{lhs,rhs}{}
-		};
+		using OrBy=BinaryOperator<L,R,OperationFunctors::OrBy>;
 		template<typename L,typename R>
-		auto operator|=(const L&lhs,const R&rhs){return OrBy(lhs,rhs);}
+		auto operator|=(const L&lhs,const R&rhs){return OrBy<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct LeftShift:public BinaryOperator<LeftShift<L,R>,L,R,OperationFunctors::LeftShift>
-		{
-			constexpr LeftShift(const L &lhs,const R &rhs):BinaryOperator<LeftShift<L,R>,L,R,OperationFunctors::LeftShift>{lhs,rhs}{}
-		};
+		using LeftShift=BinaryOperator<L,R,OperationFunctors::LeftShift>;
 		template<typename L,typename R>
-		auto operator<<(const L&lhs,const R&rhs){return LeftShift(lhs,rhs);}
+		auto operator<<(const L&lhs,const R&rhs){return LeftShift<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct RightShift:public BinaryOperator<RightShift<L,R>,L,R,OperationFunctors::RightShift>
-		{
-			constexpr RightShift(const L &lhs,const R &rhs):BinaryOperator<RightShift<L,R>,L,R,OperationFunctors::RightShift>{lhs,rhs}{}
-		};
+		using RightShift=BinaryOperator<L,R,OperationFunctors::RightShift>;
 		template<typename L,typename R>
-		auto operator>>(const L&lhs,const R&rhs){return RightShift(lhs,rhs);}
+		auto operator>>(const L&lhs,const R&rhs){return RightShift<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct RightShiftBy:public BinaryOperator<RightShiftBy<L,R>,L,R,OperationFunctors::RightShiftBy>
-		{
-			constexpr RightShiftBy(const L &lhs,const R &rhs):BinaryOperator<RightShiftBy<L,R>,L,R,OperationFunctors::RightShiftBy>{lhs,rhs}{}
-		};
+		using RightShiftBy=BinaryOperator<L,R,OperationFunctors::RightShiftBy>;
 		template<typename L,typename R>
-		auto operator>>=(const L&lhs,const R&rhs){return RightShiftBy(lhs,rhs);}
+		auto operator>>=(const L&lhs,const R&rhs){return RightShiftBy<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct LeftShiftBy:public BinaryOperator<LeftShiftBy<L,R>,L,R,OperationFunctors::LeftShiftBy>
-		{
-			constexpr LeftShiftBy(const L &lhs,const R &rhs):BinaryOperator<LeftShiftBy<L,R>,L,R,OperationFunctors::LeftShiftBy>{lhs,rhs}{}
-		};
+		using LeftShiftBy=BinaryOperator<L,R,OperationFunctors::LeftShiftBy>;
 		template<typename L,typename R>
-		auto operator<<=(const L&lhs,const R&rhs){return LeftShiftBy(lhs,rhs);}
+		auto operator<<=(const L&lhs,const R&rhs){return LeftShiftBy<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct ShortAnd:public BinaryOperator<ShortAnd<L,R>,L,R,OperationFunctors::ShortAnd>
-		{
-			constexpr ShortAnd(const L &lhs,const R &rhs):BinaryOperator<ShortAnd<L,R>,L,R,OperationFunctors::ShortAnd>{lhs,rhs}{}
-		};
+		using ShortAnd=BinaryOperator<L,R,OperationFunctors::ShortAnd>;
 		template<typename L,typename R>
-		auto operator&&(const L&lhs,const R&rhs){return ShortAnd(lhs,rhs);}
+		auto operator&&(const L&lhs,const R&rhs){return ShortAnd<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct ShortOr:public BinaryOperator<ShortOr<L,R>,L,R,OperationFunctors::ShortOr>
-		{
-			constexpr ShortOr(const L &lhs,const R &rhs):BinaryOperator<ShortOr<L,R>,L,R,OperationFunctors::ShortOr>{lhs,rhs}{}
-		};
+		using ShortOr=BinaryOperator<L,R,OperationFunctors::ShortOr>;
 		template<typename L,typename R>
-		auto operator||(const L&lhs,const R&rhs){return ShortOr(lhs,rhs);}
+		auto operator||(const L&lhs,const R&rhs){return ShortOr<L,R>(lhs,rhs);}
 		
 		template<typename L,typename R>
-		struct Comma:public BinaryOperator<Comma<L,R>,L,R,OperationFunctors::Comma>
-		{
-			constexpr Comma(const L &lhs,const R &rhs):BinaryOperator<Comma<L,R>,L,R,OperationFunctors::Comma>{lhs,rhs}{}
-		};
+		using Comma=BinaryOperator<L,R,OperationFunctors::Comma>;
 		template<typename L,typename R>
-		auto operator,(const L&lhs,const R&rhs){return Comma(lhs,rhs);}
+		auto operator,(const L&lhs,const R&rhs){return Comma<L,R>(lhs,rhs);}
 
 		template<typename L,typename R>
-		struct DereferenceIndirectAccess:public BinaryOperator<DereferenceIndirectAccess<L,R>,L,R,OperationFunctors::DereferenceIndirectAccess>
-		{
-			constexpr DereferenceIndirectAccess(const L &lhs,const R &rhs):BinaryOperator<DereferenceIndirectAccess<L,R>,L,R,OperationFunctors::DereferenceIndirectAccess>{lhs,rhs}{}
-		};
+		using DereferenceIndirectAccess=BinaryOperator<L,R,OperationFunctors::DereferenceIndirectAccess>;
+		
 		template<typename L,typename R>
-		auto operator->*(const L&lhs,const R&rhs){return DereferenceIndirectAccess(lhs,rhs);}
+		auto operator->*(const L&lhs,const R&rhs){return DereferenceIndirectAccess<L,R>(lhs,rhs);}
+
+		namespace
+		{
+			template<typename T>
+			struct nParameterNeeded
+			{
+				static std::size_t consteval apply()
+				{
+					return 0;
+				}
+			};
+
+			template<typename T>
+			struct nParameterNeeded<Unknown<T>>
+			{
+				static std::size_t consteval apply()
+				{
+					return 1;
+				}
+			};
+
+			template<typename T,auto Op>
+			struct nParameterNeeded<UnaryOperator<T,Op>>
+			{
+				static std::size_t consteval apply()
+				{
+					return nParameterNeeded<T>::apply();
+				}
+			};
+
+			template<typename L,typename R,auto Op>
+			struct nParameterNeeded<BinaryOperator<L,R,Op>>
+			{
+				static std::size_t consteval apply()
+				{
+					return nParameterNeeded<L>::apply()+nParameterNeeded<R>::apply();
+				}
+			};
+
+			template<typename F,typename ...Args>
+			struct nParameterNeeded<Call<F,Args...>>
+			{
+				static std::size_t consteval apply()
+				{
+					return (nParameterNeeded<F>::apply()+...+nParameterNeeded<Args>::apply());
+				}
+			};
+
+			template<typename A,typename ...I>
+			struct nParameterNeeded<Subscript<A,I...>>
+			{
+				static std::size_t consteval apply()
+				{
+					return (nParameterNeeded<A>::apply()+...+nParameterNeeded<I>::apply());
+				}
+			};
+
+			template<typename T,std::size_t...indices>
+			auto get_evaluators_impl(T &&thing,std::index_sequence<indices...>)
+			{
+				return std::tuple(getEvaluator(std::get<indices>(std::forward<T>(thing)))...);
+			}
+
+			template<typename ...Args>
+			auto get_evaluators(const std::tuple<Args...> &args)
+			{
+				return get_evaluators_impl(args,std::make_index_sequence<sizeof...(Args)>{});
+			}
+
+			template<typename F>
+			auto function_cat(F func)
+			{
+				return [&func]<typename R,typename ...Args>(std::function<R(Args...)>)mutable
+				{
+					return [func](Args...args)mutable
+					{
+						return std::tuple(func(args...));
+					};
+				}(std::function(func));
+			}
+
+			template<typename F1,typename F2,typename ...F>
+			auto function_cat(F1 func1,F2 func2,F...appender)
+			{
+				if constexpr(sizeof...(F)!=0)
+					return function_cat(function_cat(func1,func2),appender...);
+				else
+				{
+					return [&func1,&func2]<typename R1,typename ...Arg1>(std::function<R1(Arg1...)>)mutable
+					{
+						return [&func1,&func2]<typename R2,typename ...Arg2>(std::function<R2(Arg2...)>)mutable
+						{
+//							if constexpr((std::is_void_v<R1>)&&(std::is_void_v<R2>))
+//							{
+//								return [func1,func2](Arg1...args1,Arg2...args2)mutable
+//								{
+//									func1(args1...);
+//									func2(args2...);
+//									return;
+//								};
+//							}else if constexpr(std::is_void_v<R1>)
+//							{
+//								return [func1,func2](Arg1...args1,Arg2...args2)mutable
+//								{
+//									func1(args1...);
+//									return std::forward<R2>(func2(args2...));
+//								};
+//							}else if constexpr(std::is_void_v<R2>)
+//							{
+//								return [func1,func2](Arg1...args1,Arg2...args2)mutable
+//								{
+//									func2(args2...);
+//									return std::forward<R1>(func1(args1...));
+//								};
+//							}else
+							{
+								return [func1,func2](Arg1...args1,Arg2...args2)mutable
+								{
+									return std::tuple(std::forward<R1>(func1(args1...)),
+									                  std::forward<R2>(func2(args2...)));
+								};
+							}
+						}(std::function(func2));
+					}(std::function(func1));
+				}
+			}
+
+			template<typename ...T>
+			auto function_tuple_cat(std::tuple<T...>&&thing)
+			{
+				return std::apply([](auto... args){return function_cat<T...>(args...);},thing);
+			}
+		}
+		template<typename T>
+		auto getEvaluator(T&& thing)
+		{
+			static_assert(!std::is_base_of_v<Expression<T>,T>);
+			return [thing]()mutable{return std::forward<T>(thing);};
+		}
+
+		template<typename T>
+		auto getEvaluator(Unknown<T>)
+		{
+			return [](const T& thing){return thing;};
+		};
+
+		template<typename T>
+		auto getEvaluator(Variable<T>thing)
+		{
+			return [thing]()->const T&{return thing.value;};
+		};
+
+		template<typename T,auto Op>
+		auto getEvaluator(UnaryOperator<T,Op>operation)
+		{
+			auto evaluator{getEvaluator(operation.operand)};
+			{std::function fn(evaluator);}
+			return [&evaluator]<typename R,typename ...Arg>(std::function<R(Arg...)>)mutable
+			{
+				return [evaluator](Arg...args)mutable
+				{
+					return Op(evaluator(std::forward<Arg>(args)...));
+				};
+			}(std::function(evaluator));
+		};
+
+		template<typename L,typename R,auto Op>
+		auto getEvaluator(BinaryOperator<L,R,Op> operation)
+		{
+			auto LEval{getEvaluator(operation.lhs)};
+			auto REval{getEvaluator(operation.rhs)};
+			return [&LEval,&REval]<typename R1,typename ...Arg1>(std::function<R1(Arg1...)>)mutable
+			{
+				return [&LEval,&REval]<typename R2,typename ...Arg2>(std::function<R2(Arg2...)>)mutable
+				{
+					return [LEval,REval](Arg1...arg1,Arg2...arg2)mutable
+					{
+						return Op(LEval(arg1...),REval(arg2...));
+					};
+				}(std::function(REval));
+			}(std::function(LEval));
+		};
+
+		template<typename F,typename ...Params>
+		auto getEvaluator(Call<F,Params...>operation)
+		{
+			auto FEval{getEvaluator(operation.callee)};
+			auto ArgEval{function_tuple_cat(get_evaluators(operation.arguments))};
+			auto Eval{function_cat(FEval,ArgEval)};
+			return [&Eval]<typename R,typename ...Args>(std::function<R(Args...)>)mutable
+			{
+				return [Eval](Args...args)mutable
+				{
+					return std::apply([](auto i,auto j){return std::apply(i,j);},Eval(args...));
+				};
+			}(std::function(Eval));
+		};
+
+		template<typename A,typename ...I>
+		auto getEvaluator(Subscript<A,I...>operation)
+		{
+			auto AEval{getEvaluator(operation.array)};
+			auto IEval{function_tuple_cat(get_evaluators(operation.indices))};
+			auto Eval{function_cat(AEval,IEval)};
+			return [&Eval]<typename R,typename ...Args>(std::function<R(Args...)>)mutable
+			{
+				return [Eval](Args...args)mutable
+				{
+					return std::apply
+					(
+						[](auto i,auto j)
+						{
+							return std::apply
+							(
+								[&i](auto ...args)
+								{
+									if constexpr(std::is_fundamental_v<decltype(i)>)
+//										return i[args...];
+//										static_assert(false);
+;
+									else
+										return (i.operator[](args...));
+								},
+							j);
+						},
+					Eval(args...)
+					);
+				};
+			}(std::function(Eval));
+		};
 	}
 }
