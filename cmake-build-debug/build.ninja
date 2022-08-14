@@ -51,7 +51,7 @@ build cmake_object_order_depends_target_LambdaIt: phony || CMakeFiles/LambdaIt.d
 
 build CMakeFiles/LambdaIt.dir/main.cpp.obj: CXX_COMPILER__LambdaIt_Debug G$:/Projects/LambdaIt/main.cpp || cmake_object_order_depends_target_LambdaIt
   DEP_FILE = CMakeFiles\LambdaIt.dir\main.cpp.obj.d
-  FLAGS = -g -std=gnu++23
+  FLAGS = -Wall -Wextra -fconcepts-diagnostics-depth=999 -g -std=gnu++23
   OBJECT_DIR = CMakeFiles\LambdaIt.dir
   OBJECT_FILE_DIR = CMakeFiles\LambdaIt.dir
 
@@ -64,7 +64,7 @@ build CMakeFiles/LambdaIt.dir/main.cpp.obj: CXX_COMPILER__LambdaIt_Debug G$:/Pro
 # Link the executable LambdaIt.exe
 
 build LambdaIt.exe: CXX_EXECUTABLE_LINKER__LambdaIt_Debug CMakeFiles/LambdaIt.dir/main.cpp.obj
-  FLAGS = -g
+  FLAGS = -Wall -Wextra -fconcepts-diagnostics-depth=999 -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\LambdaIt.dir
   POST_BUILD = cd .

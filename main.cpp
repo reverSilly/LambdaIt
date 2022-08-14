@@ -8,11 +8,11 @@ void func()
 }
 int main()
 {
-	auto i=(2-it<int>).get();
+	auto i=(&(it<int&> =it<int>)).get();
 	int j=20;
-	cout<<i(j)<<' '<<j;
+	cout<<*i(j,50)<<' '<<j;
 	/**
-	 * (2-it<int>)
+	 * getEvaluator(2-it<int>)
 	 * =>
 	 * int func(int it)
 	 * {

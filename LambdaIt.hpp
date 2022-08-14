@@ -1,5 +1,5 @@
 //
-// Created by Administrator on 2022-08-08.
+// Created by Louis Li on 2022-08-08.
 //
 #include <cstddef>
 #include <utility>
@@ -14,43 +14,43 @@ namespace reverSilly
 	{
 		namespace
 		{
-			template<typename T>
-			struct function_traits;
-
-			template<typename R,typename ...Args>
-			struct function_traits<std::function<R(Args...)>>
-			{
-				static constexpr size_t nargs=sizeof...(Args);
-				using result_type=R;
-				using tuple_args=std::tuple<Args...>;
-				// 输入参数类型,i为从0开始的参数类型索引
-				template <size_t i>
-				struct arg
-				{using type=typename std::tuple_element<i,tuple_args>::type;};
-			};
-
-			template<typename T,typename R, typename ...Args>
-			struct function_traits<R(T::*)(Args...)>
-			{
-				static constexpr size_t nargs=sizeof...(Args);
-				// 返回类型
-				using result_type=R;
-				using member_type=T;
-				// 输入参数类型,i为从0开始的参数类型索引
-				template <size_t i>
-				struct arg{using type=typename std::tuple_element<i,std::tuple<Args...>>::type;};
-			};
-			template<typename T,typename R, typename ...Args>
-			struct function_traits<R(T::*)(Args...)const>
-			{
-				static constexpr size_t nargs=sizeof...(Args);
-				// 返回类型
-				using result_type=R;
-				using member_type=T;
-				// 输入参数类型,i为从0开始的参数类型索引
-				template <size_t i>
-				struct arg{using type=typename std::tuple_element<i,std::tuple<Args...>>::type;};
-			};
+//			template<typename T>
+//			struct function_traits;
+//
+//			template<typename R,typename ...Args>
+//			struct function_traits<std::function<R(Args...)>>
+//			{
+//				static constexpr size_t nargs=sizeof...(Args);
+//				using result_type=R;
+//				using tuple_args=std::tuple<Args...>;
+//				// 输入参数类型,i为从0开始的参数类型索引
+//				template <size_t i>
+//				struct arg
+//				{using type=typename std::tuple_element<i,tuple_args>::type;};
+//			};
+//
+//			template<typename T,typename R, typename ...Args>
+//			struct function_traits<R(T::*)(Args...)>
+//			{
+//				static constexpr size_t nargs=sizeof...(Args);
+//				// 返回类型
+//				using result_type=R;
+//				using member_type=T;
+//				// 输入参数类型,i为从0开始的参数类型索引
+//				template <size_t i>
+//				struct arg{using type=typename std::tuple_element<i,std::tuple<Args...>>::type;};
+//			};
+//			template<typename T,typename R, typename ...Args>
+//			struct function_traits<R(T::*)(Args...)const>
+//			{
+//				static constexpr size_t nargs=sizeof...(Args);
+//				// 返回类型
+//				using result_type=R;
+//				using member_type=T;
+//				// 输入参数类型,i为从0开始的参数类型索引
+//				template <size_t i>
+//				struct arg{using type=typename std::tuple_element<i,std::tuple<Args...>>::type;};
+//			};
 
 			template<std::size_t beg,typename T,std::size_t...indices>
 			auto get_first_n_since_impl(T&& thing,std::index_sequence<indices...>)
@@ -82,63 +82,59 @@ namespace reverSilly
 			/**
 			 * unary functors
 			 */
-			constexpr auto Flip{[]<typename T>(T&&i){return ~std::forward<T>(i);}};
-			constexpr auto Not{[]<typename T>(T&&i){return !std::forward<T>(i);}};
-			constexpr auto AddressOf{[]<typename T>(T&&i){return &std::forward<T>(i);}};
-			constexpr auto Positive{[]<typename T>(T&&i){return +std::forward<T>(i);}};
-			constexpr auto Negative{[]<typename T>(T&&i){return -std::forward<T>(i);}};
-			constexpr auto Dereference{[]<typename T>(T&&i){return *std::forward<T>(i);}};
-			constexpr auto PrefixIncrease{[]<typename T>(T&&i){return ++std::forward<T>(i);}};
-			constexpr auto PostfixIncrease{[]<typename T>(T&&i){return std::forward<T>(i)++;}};
-			constexpr auto PrefixDecrease{[]<typename T>(T&&i){return --std::forward<T>(i);}};
-			constexpr auto PostfixDecrease{[]<typename T>(T&&i){return std::forward<T>(i)--;}};
-			constexpr auto IndirectAccess{[]<typename T>(T&&i){return std::forward<T>(i).operator->();}};
+			constexpr auto Flip{[]<typename T>(T&&i)->decltype((~std::forward<T>(i))){return (~std::forward<T>(i));}};
+			constexpr auto Not{[]<typename T>(T&&i)->decltype((!std::forward<T>(i))){return (!std::forward<T>(i));}};
+			constexpr auto AddressOf{[]<typename T>(T&&i)->decltype((&std::forward<T>(i))){return (&std::forward<T>(i));}};
+			constexpr auto Positive{[]<typename T>(T&&i)->decltype((+std::forward<T>(i))){return (+std::forward<T>(i));}};
+			constexpr auto Negative{[]<typename T>(T&&i)->decltype((-std::forward<T>(i))){return (-std::forward<T>(i));}};
+			constexpr auto Dereference{[]<typename T>(T&&i)->decltype((*std::forward<T>(i))){return (*std::forward<T>(i));}};
+			constexpr auto PrefixIncrease{[]<typename T>(T&&i)->decltype((++std::forward<T>(i))){return (++std::forward<T>(i));}};
+			constexpr auto PostfixIncrease{[]<typename T>(T&&i)->decltype((std::forward<T>(i)++)){return (std::forward<T>(i)++);}};
+			constexpr auto PrefixDecrease{[]<typename T>(T&&i)->decltype((--std::forward<T>(i))){return (--std::forward<T>(i));}};
+			constexpr auto PostfixDecrease{[]<typename T>(T&&i)->decltype((std::forward<T>(i)--)){return (std::forward<T>(i)--);}};
+			constexpr auto IndirectAccess{[]<typename T>(T&&i)->decltype((std::forward<T>(i).operator->())){return (std::forward<T>(i).operator->());}};
 		}
 		namespace OperationFunctors
 		{
 			/**
 			 * binary functors
 			 */
-			constexpr auto LessThan{[]<typename L,typename R>(L&&i,R&&j){return (std::forward<L>(i)<std::forward<R>(j));}};
-			constexpr auto GreaterThan{[]<typename L,typename R>(L&&i,R&&j){return (std::forward<L>(i)>std::forward<R>(j));}};
-			constexpr auto GreaterEqual{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)>=std::forward<R>(j);}};
-			constexpr auto LessEqual{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)<=std::forward<R>(j);}};
-			constexpr auto EqualTo{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)==std::forward<R>(j);}};
-			constexpr auto NotEqualTo{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)!=std::forward<R>(j);}};
-			constexpr auto CompareTo{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)<=>std::forward<R>(j);}};
-			constexpr auto Plus{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)+std::forward<R>(j);}};
-			constexpr auto Minus{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)-std::forward<R>(j);}};
-			constexpr auto Multiply{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)*std::forward<R>(j);}};
-			constexpr auto Divide{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)/std::forward<R>(j);}};
-			constexpr auto Modular{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)%std::forward<R>(j);}};
-			constexpr auto ExclusiveOr{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)^std::forward<R>(j);}};
-			constexpr auto And{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)&std::forward<R>(j);}};
-			constexpr auto Or{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)|std::forward<R>(j);}};
-			constexpr auto Assign{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)=std::forward<R>(j);}};
-			constexpr auto PlusBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)+=std::forward<R>(j);}};
-			constexpr auto MinusBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)-=std::forward<R>(j);}};
-			constexpr auto MultiplyBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)*=std::forward<R>(j);}};
-			constexpr auto DividedBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)/=std::forward<R>(j);}};
-			constexpr auto ModularBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)%=std::forward<R>(j);}};
-			constexpr auto ExclusiveOrBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)^=std::forward<R>(j);}};
-			constexpr auto AndBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)&=std::forward<R>(j);}};
-			constexpr auto OrBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)|=std::forward<R>(j);}};
-			constexpr auto LeftShift{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)<<std::forward<R>(j);}};
-			constexpr auto RightShift{[]<typename L,typename R>(L&&i,R&&j){return (std::forward<L>(i)>>std::forward<R>(j));}};
-			constexpr auto RightShiftBy{[]<typename L,typename R>(L&&i,R&&j){return (std::forward<L>(i)>>=std::forward<R>(j));}};
-			constexpr auto LeftShiftBy{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)<<=std::forward<R>(j);}};
-			constexpr auto ShortAnd{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)&&std::forward<R>(j);}};
-			constexpr auto ShortOr{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)||std::forward<R>(j);}};
-			constexpr auto Comma{[]<typename L,typename R>(L&&i,R&&j){return (std::forward<L>(i),std::forward<R>(j));}};
-			constexpr auto DereferenceIndirectAccess{[]<typename L,typename R>(L&&i,R&&j){return std::forward<L>(i)->*std::forward<R>(j);}};
+			constexpr auto LessThan{[]<typename L,typename R>(L&&i,R&&j)->decltype(((std::forward<L>(i)<std::forward<R>(j)))){return ((std::forward<L>(i)<std::forward<R>(j)));}};
+			constexpr auto GreaterThan{[]<typename L,typename R>(L&&i,R&&j)->decltype(((std::forward<L>(i)>std::forward<R>(j)))){return ((std::forward<L>(i)>std::forward<R>(j)));}};
+			constexpr auto GreaterEqual{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)>=std::forward<R>(j))){return (std::forward<L>(i)>=std::forward<R>(j));}};
+			constexpr auto LessEqual{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)<=std::forward<R>(j))){return (std::forward<L>(i)<=std::forward<R>(j));}};
+			constexpr auto EqualTo{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)==std::forward<R>(j))){return (std::forward<L>(i)==std::forward<R>(j));}};
+			constexpr auto NotEqualTo{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)!=std::forward<R>(j))){return (std::forward<L>(i)!=std::forward<R>(j));}};
+			constexpr auto CompareTo{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)<=>std::forward<R>(j))){return (std::forward<L>(i)<=>std::forward<R>(j));}};
+			constexpr auto Plus{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)+std::forward<R>(j))){return (std::forward<L>(i)+std::forward<R>(j));}};
+			constexpr auto Minus{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)-std::forward<R>(j))){return (std::forward<L>(i)-std::forward<R>(j));}};
+			constexpr auto Multiply{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)*std::forward<R>(j))){return (std::forward<L>(i)*std::forward<R>(j));}};
+			constexpr auto Divide{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)/std::forward<R>(j))){return (std::forward<L>(i)/std::forward<R>(j));}};
+			constexpr auto Modular{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)%std::forward<R>(j))){return (std::forward<L>(i)%std::forward<R>(j));}};
+			constexpr auto ExclusiveOr{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)^std::forward<R>(j))){return (std::forward<L>(i)^std::forward<R>(j));}};
+			constexpr auto And{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)&std::forward<R>(j))){return (std::forward<L>(i)&std::forward<R>(j));}};
+			constexpr auto Or{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)|std::forward<R>(j))){return (std::forward<L>(i)|std::forward<R>(j));}};
+			constexpr auto Assign{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)=std::forward<R>(j))){return (std::forward<L>(i)=std::forward<R>(j));}};
+			constexpr auto PlusBy{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)+=std::forward<R>(j))){return (std::forward<L>(i)+=std::forward<R>(j));}};
+			constexpr auto MinusBy{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)-=std::forward<R>(j))){return (std::forward<L>(i)-=std::forward<R>(j));}};
+			constexpr auto MultiplyBy{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)*=std::forward<R>(j))){return (std::forward<L>(i)*=std::forward<R>(j));}};
+			constexpr auto DividedBy{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)/=std::forward<R>(j))){return (std::forward<L>(i)/=std::forward<R>(j));}};
+			constexpr auto ModularBy{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)%=std::forward<R>(j))){return (std::forward<L>(i)%=std::forward<R>(j));}};
+			constexpr auto ExclusiveOrBy{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)^=std::forward<R>(j))){return (std::forward<L>(i)^=std::forward<R>(j));}};
+			constexpr auto AndBy{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)&=std::forward<R>(j))){return (std::forward<L>(i)&=std::forward<R>(j));}};
+			constexpr auto OrBy{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)|=std::forward<R>(j))){return (std::forward<L>(i)|=std::forward<R>(j));}};
+			constexpr auto LeftShift{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)<<std::forward<R>(j))){return (std::forward<L>(i)<<std::forward<R>(j));}};
+			constexpr auto RightShift{[]<typename L,typename R>(L&&i,R&&j)->decltype(((std::forward<L>(i)>>std::forward<R>(j)))){return ((std::forward<L>(i)>>std::forward<R>(j)));}};
+			constexpr auto RightShiftBy{[]<typename L,typename R>(L&&i,R&&j)->decltype(((std::forward<L>(i)>>=std::forward<R>(j)))){return ((std::forward<L>(i)>>=std::forward<R>(j)));}};
+			constexpr auto LeftShiftBy{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)<<=std::forward<R>(j))){return (std::forward<L>(i)<<=std::forward<R>(j));}};
+			constexpr auto ShortAnd{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)&&std::forward<R>(j))){return (std::forward<L>(i)&&std::forward<R>(j));}};
+			constexpr auto ShortOr{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)||std::forward<R>(j))){return (std::forward<L>(i)||std::forward<R>(j));}};
+			constexpr auto Comma{[]<typename L,typename R>(L&&i,R&&j)->decltype(((std::forward<L>(i),std::forward<R>(j)))){return ((std::forward<L>(i),std::forward<R>(j)));}};
+			constexpr auto DereferenceIndirectAccess{[]<typename L,typename R>(L&&i,R&&j)->decltype((std::forward<L>(i)->*std::forward<R>(j))){return (std::forward<L>(i)->*std::forward<R>(j));}};
 		}
 
-//		template<typename T>
-////		concept IsExpression=std::is_member_function_pointer_v<decltype(&T::evaluate)>;
-////		^
-////      | old one
-//		concept IsExpression=true;
-
+		template<typename T>
+		struct Expression;
 
 		template<typename T,auto Op>
 		struct UnaryOperator;
@@ -172,14 +168,18 @@ namespace reverSilly
 		using IndirectAccess=UnaryOperator<T,OperationFunctors::IndirectAccess>;
 		template<typename L,typename R>
 		using Assign=BinaryOperator<L,R,OperationFunctors::Assign>;
+		template<typename T>
+		using AddressOf=UnaryOperator<T,OperationFunctors::AddressOf>;
 		
 		template<typename Me>
 		struct Expression
 		{
 			template<typename T>
-			Assign<Me,T> operator=(const T &that);
+			Assign<Me,T> operator=(T&&that);
 
 			IndirectAccess<Me> operator->();
+			
+			AddressOf<Me>operator&();
 
 			template<typename ...Args>
 			Call<Me,Args...> operator()(Args&&...args);
@@ -216,6 +216,7 @@ namespace reverSilly
 			using Expression<Variable<T>>::operator[];
 			using Expression<Variable<T>>::operator();
 			using Expression<Variable<T>>::operator=;
+			using Expression<Variable<T>>::operator&;
 			using Expression<Variable<T>>::operator->;
 		};
 		template<typename T>
@@ -224,6 +225,7 @@ namespace reverSilly
 			using Expression<Unknown<T>>::operator[];
 			using Expression<Unknown<T>>::operator();
 			using Expression<Unknown<T>>::operator=;
+			using Expression<Unknown<T>>::operator&;
 			using Expression<Unknown<T>>::operator->;
 		};
 		template<typename T>
@@ -236,10 +238,10 @@ namespace reverSilly
 			[[no_unique_address]]std::tuple<Args...> arguments;
 			Call(const F& func,const std::tuple<Args...>& args):callee{func},arguments{args}{}
 
-
 			using Expression<Call<F,Args...>>::operator[];
 			using Expression<Call<F,Args...>>::operator();
 			using Expression<Call<F,Args...>>::operator=;
+			using Expression<Call<F,Args...>>::operator&;
 			using Expression<Call<F,Args...>>::operator->;
 		};
 		template<typename Me>
@@ -259,6 +261,7 @@ namespace reverSilly
 			using Expression<Subscript<A,I...>>::operator[];
 			using Expression<Subscript<A,I...>>::operator();
 			using Expression<Subscript<A,I...>>::operator=;
+			using Expression<Subscript<A,I...>>::operator&;
 			using Expression<Subscript<A,I...>>::operator->;
 		};
 		template<typename Me>
@@ -277,65 +280,69 @@ namespace reverSilly
 			using Expression<UnaryOperator<T,Op>>::operator[];
 			using Expression<UnaryOperator<T,Op>>::operator();
 			using Expression<UnaryOperator<T,Op>>::operator=;
+			using Expression<UnaryOperator<T,Op>>::operator&;
 			using Expression<UnaryOperator<T,Op>>::operator->;
 		};
 
 		template<typename T>
 		using Flip=UnaryOperator<T,OperationFunctors::Flip>;
-		template<typename T>
-		auto operator~(const T&thing){return Flip<T>{thing};}
+		template<typename T>requires(std::is_base_of_v<Expression<std::decay_t<T>>,std::decay_t<T>>)
+		auto operator~(T&&thing){return Flip<T>{std::forward<T>(thing)};}
 		
 		template<typename T>
 		using Not=UnaryOperator<T,OperationFunctors::Not>;
-		template<typename T>
-		Not<T> operator!(const T&thing){return Not<T>{thing};}
-		
-		template<typename T>
-		using AddressOf=UnaryOperator<T,OperationFunctors::AddressOf>;
-		template<typename T>
-		AddressOf<T> operator&(const T&thing){return AddressOf<T>{thing};}
+		template<typename T>requires(std::is_base_of_v<Expression<std::decay_t<T>>,std::decay_t<T>>)
+		auto operator!(T&&thing){return Not<T>{std::forward<T>(thing)};}
 		
 		template<typename T>
 		using Positive=UnaryOperator<T,OperationFunctors::Positive>;
-		template<typename T>
-		Positive<T> operator+(const T&thing){return Positive<T>{thing};}
+		template<typename T>requires(std::is_base_of_v<Expression<std::decay_t<T>>,std::decay_t<T>>)
+		auto operator+(T&&thing){return Positive<T>{std::forward<T>(thing)};}
 		
 		template<typename T>
 		using Negative=UnaryOperator<T,OperationFunctors::Negative>;
-		template<typename T>
-		Negative<T> operator-(const T&thing){return Negative<T>{thing};}
+		template<typename T>requires(std::is_base_of_v<Expression<std::decay_t<T>>,std::decay_t<T>>)
+		auto operator-(T&&thing){return Negative<T>{std::forward<T>(thing)};}
 		
 		template<typename T>
 		using Dereference=UnaryOperator<T,OperationFunctors::Dereference>;
-		template<typename T>
-		Dereference<T> operator*(const T&thing){return Dereference<T>{thing};}
+		template<typename T>requires(std::is_base_of_v<Expression<std::decay_t<T>>,std::decay_t<T>>)
+		auto operator*(T&&thing){return Dereference<T>{std::forward<T>(thing)};}
 		
 		template<typename T>
 		using PrefixIncrease=UnaryOperator<T,OperationFunctors::PrefixIncrease>;
-		template<typename T>
-		auto operator++(const T&thing){return PrefixIncrease<T>{thing};}
+		template<typename T>requires(std::is_base_of_v<Expression<std::decay_t<T>>,std::decay_t<T>>)
+		auto operator++(T&&thing){return PrefixIncrease<T>{std::forward<T>(thing)};}
 		
 		template<typename T>
 		using PostfixIncrease=UnaryOperator<T,OperationFunctors::PostfixIncrease>;
-		template<typename T>
-		auto operator++(const T&thing,int){return PostfixIncrease<T>{thing};}
+		template<typename T>requires(std::is_base_of_v<Expression<std::decay_t<T>>,std::decay_t<T>>)
+		auto operator++(T&&thing,int){return PostfixIncrease<T>{std::forward<T>(thing)};}
 		
 		template<typename T>
 		using PrefixDecrease=UnaryOperator<T,OperationFunctors::PrefixDecrease>;
-		template<typename T>
-		auto operator--(const T&thing){return PrefixDecrease<T>{thing};}
+		template<typename T>requires(std::is_base_of_v<Expression<std::decay_t<T>>,std::decay_t<T>>)
+		auto operator--(T&&thing){return PrefixDecrease<T>{std::forward<T>(thing)};}
 		
 		template<typename T>
 		using PostfixDecrease=UnaryOperator<T,OperationFunctors::PostfixDecrease>;
-		template<typename T>
-		auto operator--(const T&thing,int){return PostfixDecrease<T>{thing};}
+		template<typename T>requires(std::is_base_of_v<Expression<std::decay_t<T>>,std::decay_t<T>>)
+		auto operator--(T&&thing,int){return PostfixDecrease<T>{std::forward<T>(thing)};}
 		
 		template<typename T>
 		using IndirectAccess=UnaryOperator<T,OperationFunctors::IndirectAccess>;
 		template<typename Me>
 		IndirectAccess<Me> Expression<Me>::operator->()
 		{
-			return IndirectAccess<Me>{*this};
+			return IndirectAccess<Me>{*reinterpret_cast<Me*>(this)};
+		}
+
+		template<typename T>
+		using AddressOf=UnaryOperator<T,OperationFunctors::AddressOf>;
+		template<typename Me>
+		AddressOf<Me> Expression<Me>::operator&()
+		{
+			return AddressOf<Me>{*reinterpret_cast<Me*>(this)};
 		}
 
 		template<typename L,typename R,auto Op>
@@ -348,172 +355,172 @@ namespace reverSilly
 			using Expression<BinaryOperator<L,R,Op>>::operator[];
 			using Expression<BinaryOperator<L,R,Op>>::operator();
 			using Expression<BinaryOperator<L,R,Op>>::operator=;
+			using Expression<BinaryOperator<L,R,Op>>::operator&;
 			using Expression<BinaryOperator<L,R,Op>>::operator->;
 		};
 		template<typename L,typename R>
 		using LessThan=BinaryOperator<L,R,OperationFunctors::LessThan>;
-		template<typename L,typename R>
-		auto operator<(const L&lhs,const R&rhs){return LessThan<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator<(L&&lhs,R&&rhs){return LessThan<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using GreaterThan=BinaryOperator<L,R,OperationFunctors::GreaterThan>;
-		template<typename L,typename R>
-		auto operator>(const L&lhs,const R&rhs){return GreaterThan<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator>(L&&lhs,R&&rhs){return GreaterThan<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using GreaterEqual=BinaryOperator<L,R,OperationFunctors::GreaterEqual>;
 		
-		template<typename L,typename R>
-		auto operator>=(const L&lhs,const R&rhs){return GreaterEqual<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator>=(L&&lhs,R&&rhs){return GreaterEqual<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using LessEqual=BinaryOperator<L,R,OperationFunctors::LessEqual>;
-		template<typename L,typename R>
-		auto operator<=(const L&lhs,const R&rhs){return LessEqual<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator<=(L&&lhs,R&&rhs){return LessEqual<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		template<typename L,typename R>
 		using EqualTo=BinaryOperator<L,R,OperationFunctors::EqualTo>;
-		template<typename L,typename R>
-		auto operator==(const L&lhs,const R&rhs){return EqualTo<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator==(L&&lhs,R&&rhs){return EqualTo<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using NotEqualTo=BinaryOperator<L,R,OperationFunctors::NotEqualTo>;
-		template<typename L,typename R>
-		auto operator!=(const L&lhs,const R&rhs){return NotEqualTo<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator!=(L&&lhs,R&&rhs){return NotEqualTo<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using CompareTo=BinaryOperator<L,R,OperationFunctors::CompareTo>;
-		template<typename L,typename R>
-		auto operator<=>(const L&lhs,const R&rhs){return CompareTo<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator<=>(L&&lhs,R&&rhs){return CompareTo<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 
 		template<typename L,typename R>
 		using Plus=BinaryOperator<L,R,OperationFunctors::Plus>;
-		template<typename L,typename R>
-		auto operator+(const L&lhs,const R&rhs){return Plus<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator+(L&&lhs,R&&rhs){return Plus<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using Minus=BinaryOperator<L,R,OperationFunctors::Minus>;
-		template<typename L,typename R>
-		auto operator-(const L&lhs,const R&rhs){return Minus<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator-(L&&lhs,R&&rhs){return Minus<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using Multiply=BinaryOperator<L,R,OperationFunctors::Multiply>;
-		template<typename L,typename R>
-		auto operator*(const L&lhs,const R&rhs){return Multiply<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator*(L&&lhs,R&&rhs){return Multiply<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using Divide=BinaryOperator<L,R,OperationFunctors::Divide>;
-		template<typename L,typename R>
-		auto operator/(const L&lhs,const R&rhs){return Divide<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator/(L&&lhs,R&&rhs){return Divide<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using Modular=BinaryOperator<L,R,OperationFunctors::Modular>;
-		template<typename L,typename R>
-		auto operator%(const L&lhs,const R&rhs){return Modular<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator%(L&&lhs,R&&rhs){return Modular<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using ExclusiveOr=BinaryOperator<L,R,OperationFunctors::ExclusiveOr>;
-		template<typename L,typename R>
-		auto operator^(const L&lhs,const R&rhs){return ExclusiveOr<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator^(L&&lhs,R&&rhs){return ExclusiveOr<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using And=BinaryOperator<L,R,OperationFunctors::And>;
-		template<typename L,typename R>
-		auto operator&(const L&lhs,const R&rhs){return And<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator&(L&&lhs,R&&rhs){return And<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using Or=BinaryOperator<L,R,OperationFunctors::Or>;
-		template<typename L,typename R>
-		auto operator|(const L&lhs,const R&rhs){return Or<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator|(L&&lhs,R&&rhs){return Or<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using Assign=BinaryOperator<L,R,OperationFunctors::Assign>;
 		template<typename Me>
 		template<typename T>
-		Assign<Me,T> Expression<Me>::operator=(const T &that)
+		Assign<Me,T> Expression<Me>::operator=(T &&that)
 		{
-			return Assign<Me,T>{*static_cast<Me*>(this),that};
+			return Assign<Me,T>{*static_cast<Me*>(this),std::forward<T>(that)};
 		}
 		
 		template<typename L,typename R>
 		using PlusBy=BinaryOperator<L,R,OperationFunctors::PlusBy>;
-		template<typename L,typename R>
-		auto operator+=(const L&lhs,const R&rhs){return PlusBy<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator+=(L&&lhs,R&&rhs){return PlusBy<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using MinusBy=BinaryOperator<L,R,OperationFunctors::MinusBy>;
-		template<typename L,typename R>
-		auto operator-=(const L&lhs,const R&rhs){return MinusBy<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator-=(L&&lhs,R&&rhs){return MinusBy<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using MultiplyBy=BinaryOperator<L,R,OperationFunctors::MultiplyBy>;
-		template<typename L,typename R>
-		auto operator*=(const L&lhs,const R&rhs){return MultiplyBy<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator*=(L&&lhs,R&&rhs){return MultiplyBy<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using DividedBy=BinaryOperator<L,R,OperationFunctors::DividedBy>;
-		template<typename L,typename R>
-		auto operator/=(const L&lhs,const R&rhs){return DividedBy<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator/=(L&&lhs,R&&rhs){return DividedBy<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using ModularBy=BinaryOperator<L,R,OperationFunctors::ModularBy>;
-		template<typename L,typename R>
-		auto operator%=(const L&lhs,const R&rhs){return ModularBy<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator%=(L&&lhs,R&&rhs){return ModularBy<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using ExclusiveOrBy=BinaryOperator<L,R,OperationFunctors::ExclusiveOrBy>;
-		template<typename L,typename R>
-		auto operator^=(const L&lhs,const R&rhs){return ExclusiveOrBy<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator^=(L&&lhs,R&&rhs){return ExclusiveOrBy<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using AndBy=BinaryOperator<L,R,OperationFunctors::AndBy>;
-		template<typename L,typename R>
-		auto operator&=(const L&lhs,const R&rhs){return AndBy<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator&=(L&&lhs,R&&rhs){return AndBy<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using OrBy=BinaryOperator<L,R,OperationFunctors::OrBy>;
-		template<typename L,typename R>
-		auto operator|=(const L&lhs,const R&rhs){return OrBy<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator|=(L&&lhs,R&&rhs){return OrBy<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using LeftShift=BinaryOperator<L,R,OperationFunctors::LeftShift>;
-		template<typename L,typename R>
-		auto operator<<(const L&lhs,const R&rhs){return LeftShift<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator<<(L&&lhs,R&&rhs){return LeftShift<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using RightShift=BinaryOperator<L,R,OperationFunctors::RightShift>;
-		template<typename L,typename R>
-		auto operator>>(const L&lhs,const R&rhs){return RightShift<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator>>(L&&lhs,R&&rhs){return RightShift<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using RightShiftBy=BinaryOperator<L,R,OperationFunctors::RightShiftBy>;
-		template<typename L,typename R>
-		auto operator>>=(const L&lhs,const R&rhs){return RightShiftBy<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator>>=(L&&lhs,R&&rhs){return RightShiftBy<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using LeftShiftBy=BinaryOperator<L,R,OperationFunctors::LeftShiftBy>;
-		template<typename L,typename R>
-		auto operator<<=(const L&lhs,const R&rhs){return LeftShiftBy<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator<<=(L&&lhs,R&&rhs){return LeftShiftBy<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using ShortAnd=BinaryOperator<L,R,OperationFunctors::ShortAnd>;
-		template<typename L,typename R>
-		auto operator&&(const L&lhs,const R&rhs){return ShortAnd<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator&&(L&&lhs,R&&rhs){return ShortAnd<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using ShortOr=BinaryOperator<L,R,OperationFunctors::ShortOr>;
-		template<typename L,typename R>
-		auto operator||(const L&lhs,const R&rhs){return ShortOr<L,R>(lhs,rhs);}
+		template<typename L,typename R>requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator||(L&&lhs,R&&rhs){return ShortOr<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 		
 		template<typename L,typename R>
 		using Comma=BinaryOperator<L,R,OperationFunctors::Comma>;
 		template<typename L,typename R>
-		auto operator,(const L&lhs,const R&rhs){return Comma<L,R>(lhs,rhs);}
+		auto operator,(L&&lhs,R&&rhs){return Comma<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 
 		template<typename L,typename R>
 		using DereferenceIndirectAccess=BinaryOperator<L,R,OperationFunctors::DereferenceIndirectAccess>;
-		
-		template<typename L,typename R>
-		auto operator->*(const L&lhs,const R&rhs){return DereferenceIndirectAccess<L,R>(lhs,rhs);}
+		template<typename L,typename R> requires(std::is_base_of_v<Expression<std::decay_t<L>>,std::decay_t<L>>||std::is_base_of_v<Expression<std::decay_t<R>>,std::decay_t<R>>)
+		auto operator->*(L&&lhs,R&&rhs){return DereferenceIndirectAccess<L,R>(std::forward<L>(lhs),std::forward<R>(rhs));}
 
 		namespace
 		{
@@ -655,7 +662,7 @@ namespace reverSilly
 		template<typename T>
 		auto getEvaluator(T&& thing)
 		{
-			static_assert(!std::is_base_of_v<Expression<T>,T>);
+			static_assert(!std::is_base_of_v<Expression<std::decay_t<T>>,std::decay_t<T>>);
 			return [thing]()mutable{return std::forward<T>(thing);};
 		}
 
@@ -676,11 +683,11 @@ namespace reverSilly
 		{
 			auto evaluator{getEvaluator(operation.operand)};
 			{std::function fn(evaluator);}
-			return [&evaluator]<typename R,typename ...Arg>(std::function<R(Arg...)>)mutable
+			return [&evaluator]<typename R1,typename ...Arg1>(std::function<R1(Arg1...)>)mutable
 			{
-				return [evaluator](Arg...args)mutable
+				return [evaluator](Arg1...args)mutable->decltype((Op(evaluator(std::forward<Arg1>(args)...))))
 				{
-					return Op(evaluator(std::forward<Arg>(args)...));
+					return Op(evaluator(std::forward<Arg1>(args)...));
 				};
 			}(std::function(evaluator));
 		};
@@ -694,9 +701,9 @@ namespace reverSilly
 			{
 				return [&LEval,&REval]<typename R2,typename ...Arg2>(std::function<R2(Arg2...)>)mutable
 				{
-					return [LEval,REval](Arg1...arg1,Arg2...arg2)mutable
+					return [LEval,REval](Arg1...arg1,Arg2...arg2)mutable->decltype((Op(LEval(arg1...),REval(arg2...))))
 					{
-						return Op(LEval(arg1...),REval(arg2...));
+						return (Op(LEval(arg1...),REval(arg2...)));
 					};
 				}(std::function(REval));
 			}(std::function(LEval));
